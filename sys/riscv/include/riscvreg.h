@@ -277,4 +277,38 @@
 })
 #endif
 
+#if __has_feature(sigcapabilities)
+#define key_base_func(name, text, tweak, start, end)	\
+({	uint64_t result;	\
+	__asm__ volatile(	\
+		#name " %0, %1, %2, " #start ", " #end	\
+		: "=r" (result)				\
+		: "r" (text), "r" (tweak), "r" (start), "r" (end)	\
+		:							\
+	);					\
+	result;				\
+})
+
+#define enc_mkey(text, tweak, start, end) key_base_func(cremk, text, tweak, start, end)
+#define enc_full_mkey(text, tweak) enc_mkey(text, tweak, 0, 7)
+#define enc_high_mkey(text, tweak) enc_mkey(text, tweak, 4, 7)
+#define enc_low_mkey(text, tweak)  enc_mkey(text, tweak, 0, 3)
+
+#define dec_mkey(text, tweak, start, end) key_base_func(crdmk, text, tweak, start, end)
+#define dec_full_mkey(text, tweak) dec_mkey(text, tweak, 0, 7)
+#define dec_high_mkey(text, tweak) dec_mkey(text, tweak, 4, 7)
+#define dec_low_mkey(text, tweak)  dec_mkey(text, tweak, 0, 3)
+
+#define enc_skey(text, tweak, start, end) key_base_func(cresk, text, tweak, start, end)
+#define enc_full_skey(text, tweak) enc_skey(text, tweak, 0, 7)
+#define enc_high_skey(text, tweak) enc_skey(text, tweak, 4, 7)
+#define enc_low_skey(text, tweak)  enc_skey(text, tweak, 0, 3)
+
+#define dec_skey(text, tweak, start, end) key_base_func(crdsk, text, tweak, start, end)
+#define dec_full_skey(text, tweak) dec_skey(text, tweak, 0, 7)
+#define dec_high_skey(text, tweak) dec_skey(text, tweak, 4, 7)
+#define dec_low_skey(text, tweak)  dec_skey(text, tweak, 0, 3)
+
+#endif
+
 #endif /* !_MACHINE_RISCVREG_H_ */

@@ -72,6 +72,7 @@
 #include <sys/umtxvar.h>
 #include <sys/vnode.h>
 #include <sys/wait.h>
+#include <sys/sigcheri_key.h>
 #ifdef KTRACE
 #include <sys/ktrace.h>
 #endif
@@ -414,6 +415,11 @@ do_execve(struct thread *td, struct image_args *args,
 	struct label *interpvplabel = NULL;
 	bool will_transition;
 #endif
+
+#if __has_feature(sigcapabilities)
+	construct_update_skey(p->skey_secret_buffer);
+#endif
+
 #ifdef HWPMC_HOOKS
 	struct pmckern_procexec pe;
 #endif

@@ -82,6 +82,7 @@
 #include <sys/unistd.h>
 #include <sys/vmmeter.h>
 #include <sys/vnode.h>
+#include <sys/sigcheri_key.h>
 
 #include <machine/cpu.h>
 
@@ -634,6 +635,9 @@ proc0_init(void *dummy __unused)
 
 	p->p_stats = pstats_alloc();
 
+#if __has_feature(sigcapabilities)
+	construct_update_skey(p->skey_secret_buffer);
+#endif
 	/* Allocate a prototype map so we have something to fork. */
 	p->p_vmspace = &vmspace0;
 	refcount_init(&vmspace0.vm_refcnt, 1);

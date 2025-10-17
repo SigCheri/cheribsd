@@ -693,6 +693,9 @@ struct proc {
 
 /* The following fields are all zeroed upon creation in fork. */
 #define	p_startzero	p_vmspace
+#if __has_feature(sigcapabilities)
+	uint64_t    skey_secret_buffer[4]; /* (c) Secret buffer for skey */
+#endif
 	struct vmspace	*p_vmspace;	/* (b) Address space. */
 	u_int		p_swtick;	/* (c) Tick when swapped in or out. */
 	u_int		p_cowgen;	/* (c) Generation of COW pointers. */

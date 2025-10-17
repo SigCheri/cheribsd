@@ -293,8 +293,15 @@ ENTRY(cpu_throw)
 	cmove	ca0, ca1
 	clgc	cra, _C_LABEL(pmap_activate_sw)
 	cjalr	cra
-	cmove	ca0, cs0
+	
 
+#if __has_feature(sigcapabilities)
+	cmove	ca0, cs0
+	clgc	cra, _C_LABEL(key_activate_sw)
+	cjalr	cra
+#endif
+
+	cmove	ca0, cs0
 	/* Store the new curthread */
 	csc	ca0, PC_CURTHREAD(ctp)
 	/* And the new pcb */
@@ -305,8 +312,13 @@ ENTRY(cpu_throw)
 	mv	s0, a1
 	mv	a0, a1
 	call	_C_LABEL(pmap_activate_sw)
-	mv	a0, s0
 
+#if __has_feature(sigcapabilities)
+	mv	a0, s0
+	call	_C_LABEL(key_activate_sw)
+#endif
+	
+	mv	a0, s0
 	/* Store the new curthread */
 	sd	a0, PC_CURTHREAD(tp)
 	/* And the new pcb */
@@ -483,6 +495,13 @@ ENTRY(cpu_switch)
 	cmove	ca0, ca1
 	clgc	cra, _C_LABEL(pmap_activate_sw)
 	cjalr	cra
+
+#if __has_feature(sigcapabilities)
+	cmove	ca0, cs1
+	clgc	cra, _C_LABEL(key_activate_sw)
+	cjalr	cra
+#endif
+
 	cmove	ca1, cs1
 #else
 	mv	s0, a0
@@ -490,6 +509,12 @@ ENTRY(cpu_switch)
 	mv	s2, a2
 	mv	a0, a1
 	call	_C_LABEL(pmap_activate_sw)
+
+#if __has_feature(sigcapabilities)
+	mv	a0, s1
+	call	_C_LABEL(key_activate_sw)
+#endif
+
 	mv	a1, s1
 #endif
 

@@ -72,6 +72,7 @@
 #include <sys/syscallsubr.h>
 #include <sys/sysent.h>
 #include <sys/signalvar.h>
+#include <sys/sigcheri_key.h>
 
 #include <security/audit/audit.h>
 #include <security/mac/mac_framework.h>
@@ -483,6 +484,12 @@ do_fork(struct thread *td, struct fork_req *fr, struct proc *p2, struct thread *
 #ifdef VIMAGE
 	td2->td_vnet = NULL;
 	td2->td_vnet_lpush = NULL;
+#endif
+
+#if __has_feature(sigcapabilities)
+	uint64_t skeyl, skeyh;
+	load_and_decrypt_key(&skeyl, &skeyh, td->td_proc->skey_secret_buffer);
+	encrypt_and_store_key(skeyl, skeyh, td2->td_proc->skey_secret_buffer);
 #endif
 
 	/*
