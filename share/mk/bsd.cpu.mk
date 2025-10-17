@@ -23,7 +23,12 @@ MACHINE_CPU = aim altivec
 . elif ${MACHINE_ARCH} == "powerpc64le"
 MACHINE_CPU = aim altivec vsx vsx2
 . elif ${MACHINE_CPUARCH} == "riscv"
-.  if ${MACHINE_ARCH:Mriscv*c*}
+.  if ${CPUTYPE} == "sigcheri"
+.   if ${MACHINE_ARCH:Mriscv*c*}
+MACHINE_CPU = cheri
+.   endif
+MACHINE_CPU += sigcheri
+.  elif ${MACHINE_ARCH:Mriscv*c*}
 MACHINE_CPU = cheri
 .  endif
 MACHINE_CPU += riscv
@@ -328,6 +333,12 @@ MACHINE_CPU += vsx3
 .  if ${CPUTYPE} == "cheri"
 MACHINE_CPU = cheri
 .  endif
+.  if ${CPUTYPE} == "sigcheri"
+MACHINE_CPU = sigcheri
+.  endif
+.  if ${CPUTYPE} == "cheri-sigcheri"
+MACHINE_CPU = cheri sigcheri
+.  endif
 MACHINE_CPU += riscv
 . endif
 .endif
@@ -385,6 +396,9 @@ CFLAGS.gcc+= -mabi=spe -mfloat-gprs=double -Wa,-me500
 RISCV_MARCH=	rv64imafdc
 .if ${MACHINE_CPU:Mcheri}
 RISCV_MARCH:=	${RISCV_MARCH}xcheri
+.endif
+.if ${MACHINE_CPU:Msigcheri}
+RISCV_MARCH:=	${RISCV_MARCH}_xsigcheri
 .endif
 
 .if ${MACHINE_ARCH:Mriscv*c*}
