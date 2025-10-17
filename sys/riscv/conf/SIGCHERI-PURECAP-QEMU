@@ -1,0 +1,6 @@
+#NO_UNIVERSE
+
+include "QEMU"
+include "std.SIGCHERI-PURECAP"
+
+ident SIGCHERI-PURECAP-QEMU
