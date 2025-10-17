@@ -281,9 +281,9 @@
 #define key_base_func(name, text, tweak, start, end)	\
 ({	uint64_t result;	\
 	__asm__ volatile(	\
-		#name " %0, %1, %2, " #start ", " #end	\
+		#name " %0, %1, %2, %3, %4"	\
 		: "=r" (result)				\
-		: "r" (text), "r" (tweak), "r" (start), "r" (end)	\
+		: "r" ((uint64_t)(text)), "r" ((uint64_t)(tweak)), "i" (start), "i" (end)	\
 		:							\
 	);					\
 	result;				\
