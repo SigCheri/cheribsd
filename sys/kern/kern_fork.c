@@ -487,9 +487,7 @@ do_fork(struct thread *td, struct fork_req *fr, struct proc *p2, struct thread *
 #endif
 
 #if __has_feature(sigcapabilities)
-	uint64_t skeyl, skeyh;
-	load_and_decrypt_key(&skeyl, &skeyh, td->td_proc->skey_secret_buffer);
-	encrypt_and_store_key(skeyl, skeyh, td2->td_proc->skey_secret_buffer);
+	reencrypt_skey(td->td_proc->skey_secret_buffer, td2->td_proc->skey_secret_buffer);
 #endif
 
 	/*
