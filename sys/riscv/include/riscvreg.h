@@ -309,6 +309,35 @@
 #define dec_high_skey(text, tweak) dec_skey(text, tweak, 4, 7)
 #define dec_low_skey(text, tweak)  dec_skey(text, tweak, 0, 3)
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#define lc_sig(addr, val)\
+__asm__ volatile(	\
+	"clc.sig.t0 %[val], 0(%[addr])\n"	\
+	: [val] "=C" (val)			\
+	: [addr] "C" (addr)				\
+);
+
+#define sc_sig(addr, val)\
+__asm__ volatile(	\
+	"csc.sig.t0 %1, 0(%0)\n"	\
+	:	\
+	: "C" (addr), "C" (val) \
+);
+#else
+#define lc_sig(addr, val)\
+__asm__ volatile(	\
+	"lc.sig.t0 %0, 0(%1)\n"	\
+	: "=r" (val)			\
+	: "r" (addr)				\
+);
+
+#define sc_sig(addr, val)\
+__asm__ volatile(	\
+	"sc.sig.t0 %[val], 0(%[addr])\n"	\
+	:	\
+	: [addr] "r" (addr), [val] "r" (val) \
+);
 #endif
 
+#endif
 #endif /* !_MACHINE_RISCVREG_H_ */
