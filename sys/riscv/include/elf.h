@@ -87,6 +87,7 @@ __ElfType(Auxinfo);
 #define	ELF_MACHINE_OK(x) ((x) == (ELF_ARCH))
 
 #define	ELF_IS_CHERI(hdr) (((hdr)->e_flags & EF_RISCV_CHERIABI) != 0)
+#define	ELF_IS_PURESIG(hdr) (((hdr)->e_flags & EF_RISCV_SIGMODE) != 0)
 
 #define	PT_MEMTAG_CHERI	PT_RISCV_MEMTAG_CHERI
 
