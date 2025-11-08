@@ -40,6 +40,9 @@
 #include "cheri_reloc.h"
 #include "debug.h"
 #include "rtld.h"
+#if __has_feature(sigcapabilities)
+#include "machine/riscvreg.h"
+#endif
 
 #ifdef RTLD_HAS_CAPRELOCS
 void
@@ -115,7 +118,15 @@ process___cap_relocs(Obj_Entry* obj)
 			/* Convert function pointers to sentries: */
 			cap = cheri_sealentry(cap);
 		}
+	#if __has_feature(sigcapabilities)
+		if(obj->puresig_abi && reloc != start_relocs){
+			sc_sig(dest, cap);
+		}else{
+			*dest = cap;
+		}
+	#else
 		*dest = cap;
+	#endif
 	}
 
 	obj->cap_relocs_processed = true;

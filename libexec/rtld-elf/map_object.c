@@ -67,6 +67,34 @@ phdr_in_zero_page(const Elf_Ehdr *hdr)
 	return (hdr->e_phoff + hdr->e_phnum * sizeof(Elf_Phdr) <= page_size);
 }
 
+static bool ends_with_sig_test_bench(const char *str) {
+    const char *suffix = "sig_test_bench";
+    const char *s = suffix;
+    
+    // 先找到两个字符串的结尾
+    const char *str_end = str;
+    while (*str_end != '\0') str_end++;
+    
+    const char *suffix_end = s;
+    while (*suffix_end != '\0') suffix_end++;
+    
+    // 如果主字符串比后缀短，直接返回false
+    if ((str_end - str) < (suffix_end - s)) {
+        return false;
+    }
+    
+    // 从后往前比较
+    while (suffix_end > s) {
+        str_end--;
+        suffix_end--;
+        if (*str_end != *suffix_end) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 /*
  * Map a shared object into memory.  The "fd" argument is a file descriptor,
  * which must be open on the object and positioned at its beginning.
@@ -333,6 +361,11 @@ map_object(int fd, const char *path, const struct stat *sb, bool ismain,
     }
 
     obj = obj_new();
+
+#if __has_feature(sigcapabilities)
+    obj->puresig_abi = ELF_IS_PURESIG(hdr);
+#endif
+
     if (sb != NULL) {
 	obj->dev = sb->st_dev;
 	obj->ino = sb->st_ino;

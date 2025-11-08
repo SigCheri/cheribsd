@@ -46,6 +46,9 @@
 #include <sys/uio.h>
 #include <sys/utsname.h>
 #include <sys/ktrace.h>
+#if __has_feature(sigcapabilities)
+#include <machine/riscvreg.h>
+#endif
 
 #include <dlfcn.h>
 #include <err.h>
@@ -918,6 +921,10 @@ _rtld(Elf_Addr *sp, func_ptr_type *exit_proc, Obj_Entry **objp)
 #endif
     }
 
+	if(aux_info[AT_EHDRFLAGS] != NULL) {
+		obj_main->puresig_abi = EF_RISCV_SIGMODE & aux_info[AT_EHDRFLAGS]->a_un.a_val;
+	}
+
     if (aux_info[AT_EXECPATH] != NULL && fd == -1) {
 	    kexecpath = aux_info[AT_EXECPATH]->a_un.a_ptr;
 	    dbg("AT_EXECPATH %p %s", kexecpath, kexecpath);
@@ -1162,6 +1169,24 @@ _rtld(Elf_Addr *sp, func_ptr_type *exit_proc, Obj_Entry **objp)
 	rtld_exit_ptr = make_rtld_function_pointer(rtld_exit);
     *exit_proc = rtld_exit_ptr;
     *objp = obj_main;
+
+#if __has_feature(sigcapabilities)
+	if(obj_main->puresig_abi){
+		for (auxp = aux; auxp->a_type != AT_NULL; auxp++) {
+			if (auxp->a_type == AT_ARGV ||
+				auxp->a_type == AT_ENVV	
+				#ifndef PIC
+					|| auxp->a_type == AT_PHDR
+				#endif
+			) {
+				sc_sig(&auxp->a_un.a_ptr, auxp->a_un.a_ptr);
+			}
+		}
+		// for(i= 0;i < argc; i++){
+		// 	sc_sig(&argv[i], argv[i]);
+		// }
+	}
+#endif
 
 #ifdef CHERI_LIB_C18N
     return ((func_ptr_type)tramp_intern(NULL, RTLD_COMPART_ID,
@@ -2919,6 +2944,9 @@ init_rtld(caddr_t mapbase, Elf_Auxinfo **aux_info)
 #if __has_feature(capabilities)
     /* This was done in _rtld_do___caprelocs_self */
     objtmp.cap_relocs_processed = true;
+#endif
+#if __has_feature(sigcapabilities)
+	objtmp.puresig_abi = ELF_IS_PURESIG(ehdr);
 #endif
 
 #ifdef __CHERI_PURE_CAPABILITY__

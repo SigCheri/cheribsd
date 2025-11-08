@@ -386,8 +386,9 @@ typedef struct Struct_Obj_Entry {
     bool marker : 1;		/* marker on the global obj list */
     bool unholdfree : 1;	/* unmap upon last unhold */
     bool doomed : 1;		/* Object cannot be referenced */
-#if __has_feature(capabilities)
+#if __has_feature(capabilities) || __has_feature(sigcapabilities)
     bool cap_relocs_processed : 1; /* __cap_relocs section has been processed */
+    bool puresig_abi : 1;
 #endif
 
     MD_OBJ_ENTRY;
