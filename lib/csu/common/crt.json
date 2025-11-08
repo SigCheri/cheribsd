@@ -9,7 +9,15 @@
 		"crtend.o",
 		"crtendS.o",
 		"crti.o",
-		"crtn.o"
+		"crtn.o",
+		"crt1_sig.o",
+		"crtbegin_sig.o",
+		"crtbeginS_sig.o",
+		"crtbeginT_sig.o",
+		"crtend_sig.o",
+		"crtendS_sig.o",
+		"crti_sig.o",
+		"crtn_sig.o"
 	    ]
 	}
     }

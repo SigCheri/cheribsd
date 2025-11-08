@@ -18,6 +18,14 @@ OBJS+=	gcrt1.o
 OBJS+=	crti.o crtn.o
 .endif
 
+SIG_OBJS =
+.if ${MACHINE_CPU:Msigcheri} && ${MACHINE_CPU:Mriscv}
+SIG_OBJS+=	Scrt1_sig.o crt1_sig.o
+SIG_OBJS+=	crtbegin_sig.o crtbeginS_sig.o crtbeginT_sig.o
+SIG_OBJS+=	crtend_sig.o crtendS_sig.o
+.endif
+OBJS += ${SIG_OBJS}
+
 CRT1OBJS+=	crtbrand.o feature_note.o ignore_init_note.o
 
 ACFLAGS+=	-DLOCORE
@@ -34,6 +42,15 @@ CFLAGS+=	-fno-jump-tables
 CFLAGS+=	-I${.CURDIR:H}/common-cheri
 .endif
 
+SIG_CFLAGS = ${CFLAGS}
+.if ${MACHINE_CPU:Msigcheri} && ${MACHINE_CPU:Mriscv}
+SIG_CFLAGS +=	-march=rv64imafdc_xcheri_xsigcheri -mabi=l64ps128d
+.endif
+
+# .info OBJS=${OBJS} MACHINE_CPU=${MACHINE_CPU} 
+# .info ${CFLAGS}
+# .info SIG_CFLAGS=${SIG_CFLAGS} 
+
 CFLAGS_CRTS+=	-DSHARED ${PICFLAG}
 
 FILES=		${OBJS} crt.json
@@ -46,9 +63,10 @@ FILESDIR=	${LIBDIR}
 
 CRT1SRC?=	crt1_c.c
 CRT1OBJ?=
+SIG_CRT1OBJ = $(patsubst %.o,%_sig.o,$(CRT1OBJ))
 
-CLEANFILES+=	${OBJS} ${CRT1OBJS} crt1_c.o gcrt1_c.o Scrt1_c.o
-CLEANFILES+=	crti_s.o ${CRT1SRC:C/.[S|c]$/.o/}
+CLEANFILES+=	${OBJS} ${CRT1OBJS} crt1_c.o gcrt1_c.o Scrt1_c.o crt1_c_sig.o gcrt1_c_sig.o Scrt1_c_sig.o
+CLEANFILES+=	crti_s.o ${CRT1SRC:C/.[S|c]$/.o/} crti_s_sig.o ${CRT1SRC:C/.[S|c]$/_sig.o/}
 
 crt1.o:	${CRT1SRC:C/.[S|c]$/.o/} ${CRT1OBJS} ${CRT1OBJ}
 	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*.o}
@@ -86,6 +104,51 @@ crti_s.o: crti.S
 
 crti.o: crti_s.o crtbrand.o
 	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*.o}
+
+.if ${MACHINE_CPU:Msigcheri} && ${MACHINE_CPU:Mriscv}
+
+crt1_c_sig.o: ${CRT1SRC}
+	${CC} ${SIG_CFLAGS} -c -o ${.TARGET} ${.CURDIR}/${CRT1SRC}
+
+crt1_sig.o:	${CRT1SRC:C/.[S|c]$/_sig.o/} ${CRT1OBJS} ${SIG_CRT1OBJ}
+	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*_sig.o}
+
+gcrt1_c_sig.o: ${CRT1SRC}
+	${CC} ${SIG_CFLAGS} -DGCRT -c -o ${.TARGET} ${.CURDIR}/${CRT1SRC}
+
+gcrt1_sig.o: gcrt1_c_sig.o ${CRT1OBJS} ${SIG_CRT1OBJ}
+	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*_sig.o}
+
+Scrt1_c_sig.o: ${CRT1SRC}
+	${CC} ${SIG_CFLAGS} -fPIC -DPIC -c -o ${.TARGET} ${.CURDIR}/${CRT1SRC}
+
+Scrt1_sig.o: Scrt1_c_sig.o ${CRT1OBJS} ${SIG_CRT1OBJ}
+	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*_sig.o}
+
+# __FreeBSD_version is recorded in crt1_sig.o et al via crtbrand.
+crtbrand_sig.o: ${SRCTOP}/sys/sys/param.h
+
+crtbegin_sig.o: crtbegin.c
+crtbeginS_sig.o: crtbegin.c
+crtbeginT_sig.o: crtbegin.c
+crtend_sig.o: crtend.c
+crtendS_sig.o: crtend.c
+
+crtbegin_sig.o crtend_sig.o crtbeginT_sig.o:
+	${CC} ${SIG_CFLAGS} -I${.CURDIR} -c -o ${.TARGET} ${.ALLSRC:N*.h:[1]}
+	$(error "compile crtbegin)
+
+crtbeginS_sig.o crtendS_sig.o:
+	${CC} ${SIG_CFLAGS} -I${.CURDIR} ${CFLAGS_CRTS} -c -o ${.TARGET} \
+	    ${.ALLSRC:N*.h:[1]}
+
+
+crti_s_sig.o: crti.S
+	${CC} ${SIG_CFLAGS} ${ACFLAGS} -c ${.ALLSRC:M*.S} -o ${.TARGET}
+
+crti_sig.o: crti_s_sig.o crtbrand_sig.o
+	${LD} ${_LDFLAGS} -o ${.TARGET} -r ${.ALLSRC:M*_sig.o}
+.endif
 
 .endif
 
