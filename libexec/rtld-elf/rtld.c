@@ -922,7 +922,9 @@ _rtld(Elf_Addr *sp, func_ptr_type *exit_proc, Obj_Entry **objp)
     }
 
 	if(aux_info[AT_EHDRFLAGS] != NULL) {
+#if __has_feature(sigcapabilities)
 		obj_main->puresig_abi = EF_RISCV_SIGMODE & aux_info[AT_EHDRFLAGS]->a_un.a_val;
+#endif
 	}
 
     if (aux_info[AT_EXECPATH] != NULL && fd == -1) {
