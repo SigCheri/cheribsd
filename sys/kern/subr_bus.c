@@ -38,6 +38,9 @@
 #include <sys/conf.h>
 #include <sys/domainset.h>
 #include <sys/eventhandler.h>
+#if defined(COMPAT_FREEBSD32) || defined(COMPAT_FREEBSD64)
+#include <sys/proc.h>
+#endif
 #include <sys/jail.h>
 #include <sys/lock.h>
 #include <sys/kernel.h>
