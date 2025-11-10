@@ -1,7 +1,10 @@
 #include <sys/types.h>
 #include <sys/proc.h>
 #include <sys/sigcheri_key.h>
+#include <sys/systm.h>
 #include <machine/riscvreg.h>
+
+#if __has_feature(sigcapabilities)
 
 struct key_pair {
     uint64_t keyl;
@@ -40,6 +43,8 @@ static inline struct key_pair construct_new_skey(void){
     tweak = cycle_read_entroy();
     keys.keyh = enc_full_mkey(key, tweak);
 
+    #undef cycle_read_entroy
+
     return keys;
 }
 
@@ -65,6 +70,24 @@ void load_update_skey(uint64_t key_buffer[4]){
     csr_write(skeyh, key.keyh);
     fence_i();
 }
+#else /* !__has_feature(sigcapabilities) */
+
+void construct_update_skey(uint64_t key_buffer[4])
+{
+    bzero(key_buffer, sizeof(uint64_t) * 4);
+}
+
+void reencrypt_skey(uint64_t buffer_from[4], uint64_t buffer_to[4])
+{
+    bcopy(buffer_from, buffer_to, sizeof(uint64_t) * 4);
+}
+
+void load_update_skey(uint64_t key_buffer[4])
+{
+    (void)key_buffer;
+}
+
+#endif /* __has_feature(sigcapabilities) */
 
 void
 key_activate_sw(struct thread *td)
@@ -73,6 +96,8 @@ key_activate_sw(struct thread *td)
 #if __has_feature(sigcapabilities)
     uint64_t* buffer = td->td_proc->skey_secret_buffer;
     load_update_skey(buffer);
+#else
+    (void)td;
 #endif
 	
 }
