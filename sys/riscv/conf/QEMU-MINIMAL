@@ -39,6 +39,7 @@ nooptions	WITNESS_SKIPSPIN	# Disable witness spinlock tracking
 nodevice	vtnet			# Omit VirtIO PCI Ethernet device
 nodevice	cgem			# Drop Cadence GEM Ethernet driver
 nodevice	axidma			# Remove AXI DMA support used by cgem
+nodevice	xae			# Drop Xilinx AXI Ethernet driver
 nodevice	miibus			# Remove generic MII bus layer
 nodevice	vlan			# Disable 802.1Q VLAN pseudo-interface
 nodevice	tuntap			# Remove tun/tap network tunnels
